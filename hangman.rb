@@ -55,16 +55,38 @@ module Hangman
       valid_input = false
 
       until valid_input
+        puts("You can enter /help, /quit or /save at anytime.")
+
         print("#{name}, enter guess: ")
 
         guess = gets.chomp
 
-        valid_input = !(guess =~ /\d|\s|\W|\t/) && guess != ""
+        guess.downcase!
 
-        puts('Please enter a letter or word guess') unless valid_input
+        valid_command = valid_command?(guess) if guess[0].eql?('/')
 
-        judge.check_guess(guess.downcase) if valid_input
+        valid_input = valid_command || !(guess =~ /\d|\s|\W|\t/) && guess != ""
+
+        puts('Please enter a letter, word guess, or command') unless valid_input
+
+        judge.check_guess(guess) if valid_input && !valid_command
+
+        do_command(guess) if valid_command
       end
+    end
+
+    private
+
+    def valid_command?(command)
+      command = command[1..-1]
+
+      ["help", "save", "quit"].include?(command)
+    end 
+
+    def do_command(command)
+      command = command[1..-1]
+
+      puts("#{command} goes here")
     end
   end
 
