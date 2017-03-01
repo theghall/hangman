@@ -12,6 +12,8 @@ module Hangman
     attr_accessor :figure_pieces, :miss_index, :hangman
 
     def initialize
+      # 8 is there twice to make sure the space
+      # between the legs is included
       @miss_index = [1,5,3,2,4,6,9,7,8,8,10]
 
       @figure_pieces = "O_/|\\__/ \\_"
@@ -82,7 +84,7 @@ module Hangman
 
         judge.check_guess(guess) if valid_input && !valid_command
 
-        do_command(guess) if valid_command
+        do_command(judge, guess) if valid_command
       end
     end
 
@@ -94,10 +96,17 @@ module Hangman
       ["help", "save", "quit"].include?(command)
     end 
 
-    def do_command(command)
+    def do_command(judge, command)
       command = command[1..-1]
 
-      puts("#{command} goes here")
+      case command
+      when 'help'
+        judge.give_help
+      when 'quit'
+        judge.quit
+      else
+        puts("#{command} goes here")
+      end
     end
   end
 
@@ -106,7 +115,8 @@ module Hangman
     MAX_GUESSES = 10
 
     attr_accessor :secret_word, :letter_guesses, :player_won, :game_dict, \
-                  :current_guess, :game_over, :num_misses, :figure
+                  :current_guess, :game_over, :num_misses, :figure, \
+                  :player_quit
 
     def initialize(figure, dictionary = '5desk.text')
       @letter_guesses = ''
@@ -120,6 +130,8 @@ module Hangman
       @num_misses = 0
 
       @figure = figure
+
+      @player_quit = false
     end
 
     def officiate(player)
@@ -127,7 +139,7 @@ module Hangman
 
       figure.display(current_guess, letter_guesses, num_misses)
 
-      until game_over
+      until game_over || player_quit
         player.take_turn(self)
 
         figure.display(current_guess, letter_guesses, num_misses)
@@ -164,6 +176,21 @@ module Hangman
       end
     end
 
+    def give_help
+      puts <<END_HELP
+Hangman is a guessing game in which you try to guess a secret word.
+You can guess the word a letter at a time or the entire word.  If
+your guess is incorrect then you are one step closet to being 
+'hanged.'  You have 10 incorrect guesses of a letter or a word
+before you are 'hanged'.  Guessing a letter you have already incorr-
+ctly guessed will not penalize you.
+END_HELP
+    end
+
+    def quit
+      self.player_quit = true
+    end
+
     private
 
     def set_secret_word
@@ -183,8 +210,10 @@ module Hangman
     def print_game_result(player)
       if player_won
         puts("Congratulations #{player.name}, you guessed my secret word!")
-      else
+      elsif !player_quit
         puts("Sorry #{player.name}, you got hanged! My secret word was: #{secret_word}.")
+      else
+        puts("#{player.name}, thanks for playing Hangman!")
       end
     end
   end
