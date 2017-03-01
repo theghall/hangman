@@ -6,40 +6,51 @@ require 'byebug'
 
 # All you need to play hangman
 module Hangman
-  # Print out hangman by row
-  def self.print_row(row, num_misses) 
-    case row
-    when 1
-      print("_____\n")
-      print("|   |\n")
-    when 3
-      print("|\n") if num_misses == 0
-      print("|   O\n") if num_misses >= 1
-    when 4
-      print("|   \n") if num_misses < 2
-      print("|   |\n") if num_misses == 2
-      print("|  /|\n") if num_misses == 3
-      print("|  /|\\\n") if num_misses == 4
-      print("| _/|\\\n") if num_misses == 5
-      print("| _/|\\_\n") if num_misses >= 6
-    when 5
-      print("|   \n") if num_misses < 7
-      print("|  /\n") if num_misses == 7
-      print("|  / \\\n") if num_misses == 8
-      print("| _/ \\\n") if num_misses == 9
-      print("| _/ \\_\n") if num_misses == 10
-    when 6
-      print("|_____\n")
+  # Displays a Hangman figure for 10 misses
+  class HangmanFigure
+
+    attr_accessor :figure_pieces, :miss_index, :hangman
+
+    def initialize
+      @miss_index = [1,5,3,2,4,6,9,7,8,8,10]
+
+      @figure_pieces = "O_/|\\__/ \\_"
     end
-  end
 
-  # Display the hangman and game state
-  def self.display_hangman(current_guess, letter_guesses, num_misses)
-    (1..6).each { |i| self.print_row(i, num_misses) }
+    def display(current_guess, letter_guesses, num_misses)
+      build_hangman(num_misses)
 
-    puts("Missed letters: #{letter_guesses}")
+      puts("_____\n")
 
-    puts("current guess: #{current_guess}")
+      puts("|   |\n")
+
+      puts("|   #{hangman[0,1]}")
+
+      puts("| #{hangman[1,5]}")
+
+      puts("| #{hangman[6,5]}")
+
+      puts("|_____")
+
+      puts("Missed letters: #{letter_guesses}")
+
+      puts("current guess: #{current_guess}")
+    end
+
+    private
+
+    def build_hangman(num_misses)
+      self.hangman = ''
+
+      figure_pieces.each_char.inject(0) do |index, ch|
+
+       break if index > figure_pieces.length
+
+       self.hangman << (miss_index[index] <= num_misses ? ch : ' ')
+
+       index += 1
+      end
+    end
   end
 
   # Models Hangman Player
@@ -95,9 +106,9 @@ module Hangman
     MAX_GUESSES = 10
 
     attr_accessor :secret_word, :letter_guesses, :player_won, :game_dict, \
-                  :current_guess, :game_over, :num_misses
+                  :current_guess, :game_over, :num_misses, :figure
 
-    def initialize(dictionary = '5desk.text')
+    def initialize(figure, dictionary = '5desk.text')
       @letter_guesses = ''
 
       @player_won = false
@@ -107,17 +118,19 @@ module Hangman
       @game_dict = build_game_dict(dictionary)
 
       @num_misses = 0
+
+      @figure = figure
     end
 
     def officiate(player)
       set_secret_word
 
-      Hangman::display_hangman(current_guess, letter_guesses, num_misses)
+      figure.display(current_guess, letter_guesses, num_misses)
 
       until game_over
         player.take_turn(self)
 
-        Hangman::display_hangman(current_guess, letter_guesses, num_misses)
+        figure.display(current_guess, letter_guesses, num_misses)
       end
 
       print_game_result(player)
