@@ -1,5 +1,25 @@
 # hangman.rb
 #
+# Hangman is a guessing game in which a player has to guess a secret word.
+# The player has a certain number of guesses before they lose.  Guesses
+# are shown via a hangman.  The player can guess a letter at a time or
+# the entire word.  Each incorrect guess adds one body part to the hangman.
+# This module is set to end after 10 guesses, after which the player is
+# 'hanged.'  
+#
+# To use you need the following; the dictionary file defaults to 5desk.txt:
+# HangmanPlayer(<name>)
+# HangmanFigure
+# HangmanJudge(<HangmanFigure>,[dictionary_file])
+#
+# To start the game:
+# HangmanJudge#officate(<HangmanPlayer>)
+#
+# The file to save a game to is stored in the constant SAVE_FILE.
+#
+# The saved file contains the HangmanJudge object.  Once loaded just
+# call HangmanJudge#Officiate and the game will continue
+#
 # 20170226  GH
 #
 
@@ -45,7 +65,6 @@ module Hangman
       self.hangman = ''
 
       figure_pieces.each_char.inject(0) do |index, ch|
-        break if index > figure_pieces.length
 
         self.hangman << (miss_index[index] <= num_misses ? ch : ' ')
 
@@ -243,7 +262,7 @@ END_HELP
 
          gd << word if word.length >= 5 && word.length <= 12
        end
-      rescue IOError, Errno::ENOENT
+      rescue IOError, Errno::ENOENT, Errno::EACCES
         puts('There was an error opening the dictionary')
         exit
       end
